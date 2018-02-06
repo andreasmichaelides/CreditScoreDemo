@@ -22,6 +22,8 @@ public class CreditScoreViewerActivity extends DaggerAppCompatActivity {
 
     @BindView(R.id.creditScoreToolbar)
     Toolbar creditScoreToolbar;
+    @BindView(R.id.progressBar)
+    CreditScoreProgressBar progressBar;
 
     private CreditScoreViewerViewModel viewModel;
 
@@ -48,5 +50,8 @@ public class CreditScoreViewerActivity extends DaggerAppCompatActivity {
 
     private void onCreditScoreLoaded(CreditScore creditScore) {
         Toast.makeText(this, creditScore.toString(), Toast.LENGTH_SHORT).show();
+
+        float progress = ((float)creditScore.currentScore() / (float)creditScore.maxScore() * 100f) ;
+        progressBar.setProgress((int)progress);
     }
 }
