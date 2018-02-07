@@ -16,14 +16,13 @@ import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 
 import com.snazzy.creditscoredemo.R;
+import com.snazzy.creditscoredemo.core.presentation.creditscoreprogressbar.ArcSize;
+import com.snazzy.creditscoredemo.core.presentation.creditscoreprogressbar.CreditScoreProgressBarUtils;
+import com.snazzy.creditscoredemo.core.presentation.creditscoreprogressbar.GradientColourValues;
 
 public class CreditScoreProgressBar extends View {
 
-    private float outerArcSize;
-    private float innerOutlineArcSize;
-    private float innerArcPadding;
-    private int viewWidth;
-    private int viewHeight;
+    private CreditScoreProgressBarUtils utils;
 
     private final float startAngle = -90;
     private float sweepAngle = 0;
@@ -37,13 +36,8 @@ public class CreditScoreProgressBar extends View {
 
     final float gradientRotationAngle = -91;
     int[] colors;
-    private int progress = 0;
-    private int xCentre;
-    private int yCentre;
-    Shader gradient;
-    int outerArcDiameter;
-    RectF outerArcOval;
-    RectF innerArcOval;
+    private RectF outerArcOval;
+    private RectF innerArcOval;
 
     public CreditScoreProgressBar(Context context) {
         this(context, null);
@@ -62,9 +56,10 @@ public class CreditScoreProgressBar extends View {
 
     private void init() {
         float innerArcOutlineSize = getResources().getDimension(R.dimen.donut_inner_arc_outline_size);
-        outerArcSize = getResources().getDimension(R.dimen.donut_outer_size);
-        innerOutlineArcSize = getResources().getDimension(R.dimen.donut_inner_arc_size);
-        innerArcPadding = getResources().getDimension(R.dimen.donut_inner_padding);
+        float outerArcSize = getResources().getDimension(R.dimen.donut_outer_size);
+        float innerOutlineArcSize = getResources().getDimension(R.dimen.donut_inner_arc_size);
+        float innerArcPadding = getResources().getDimension(R.dimen.donut_inner_padding);
+        utils = new CreditScoreProgressBarUtils(innerOutlineArcSize, innerArcPadding, outerArcSize);
 
         int startColor = ContextCompat.getColor(getContext(), R.color.progress_dark);
         int endColor = ContextCompat.getColor(getContext(), R.color.progress_light);
@@ -94,45 +89,10 @@ public class CreditScoreProgressBar extends View {
     @Override
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
-        viewWidth = width;
-        viewHeight = height;
-        xCentre = viewWidth / 2;
-        yCentre = viewHeight / 2;
+        utils.setSize(width, height);
         initInnerArcGradient();
-        initOuterArcVariables();
-        initInnerArcVariables();
-    }
-
-    private void initInnerArcGradient() {
-        float[] positions = {0.0f, ((float) progress) / 100f};
-        gradient = new SweepGradient(xCentre, yCentre, colors , positions);
-        Matrix gradientMatrix = new Matrix();
-        gradientMatrix.preRotate(gradientRotationAngle, xCentre, yCentre);
-        gradient.setLocalMatrix(gradientMatrix);
-
-        innerArcPaint.setShader(gradient);
-    }
-
-    private void initOuterArcVariables() {
-        outerArcDiameter = Math.min(viewWidth, viewHeight);
-        int halfDiameter = outerArcDiameter / 2;
-        float left = xCentre - halfDiameter + outerArcSize;
-        float top = yCentre - halfDiameter + outerArcSize;
-        float right = xCentre + halfDiameter - outerArcSize;
-        float bottom = yCentre + halfDiameter - outerArcSize;
-
-        outerArcOval = new RectF(left, top, right, bottom);
-    }
-
-    private void initInnerArcVariables() {
-        int innerArcDiameter = Math.min(viewWidth, viewHeight);
-        int halfDiameter = innerArcDiameter / 2;
-        float left = xCentre - halfDiameter + innerOutlineArcSize + (int) innerArcPadding;
-        float top = yCentre - halfDiameter + innerOutlineArcSize + (int) innerArcPadding;
-        float right = xCentre + halfDiameter - innerOutlineArcSize - (int) innerArcPadding;
-        float bottom = yCentre + halfDiameter - innerOutlineArcSize - (int) innerArcPadding;
-
-        innerArcOval = new RectF(left, top, right, bottom);
+        initOuterArc();
+        initInnerArc();
     }
 
     @Override
@@ -142,11 +102,32 @@ public class CreditScoreProgressBar extends View {
         drawInnerArcOutline(canvas);
     }
 
+    private void initInnerArcGradient() {
+        GradientColourValues gradientValues = utils.calculateGradientColourValues();
+        Shader gradient = new SweepGradient(gradientValues.xCentre(), gradientValues.yCentre(), colors, gradientValues.colourPositions());
+        Matrix gradientMatrix = new Matrix();
+        gradientMatrix.preRotate(gradientRotationAngle, gradientValues.xCentre(), gradientValues.yCentre());
+        gradient.setLocalMatrix(gradientMatrix);
+
+        innerArcPaint.setShader(gradient);
+    }
+
+    private void initOuterArc() {
+        ArcSize arcSize = utils.calculateOuterArcSize();
+        outerArcOval = new RectF(arcSize.left(), arcSize.top(), arcSize.right(), arcSize.bottom());
+    }
+
+    private void initInnerArc() {
+        ArcSize arcSize = utils.calculateInnerArcSize();
+        innerArcOval = new RectF(arcSize.left(), arcSize.top(), arcSize.right(), arcSize.bottom());
+    }
+
     private void drawOuterArc(Canvas canvas) {
         canvas.drawArc(outerArcOval, startAngle, 360, false, outerArcPaint);
     }
 
     private void drawInnerArcOutline(Canvas canvas) {
+        // Draw the outline of the inner arc first, so the inner arc paint can draw on top of it
         canvas.drawArc(innerArcOval, startAngle, sweepAngle, false, outlineArcPaint);
         canvas.drawArc(innerArcOval, startAngle, sweepAngle, false, innerArcPaint);
     }
@@ -156,7 +137,7 @@ public class CreditScoreProgressBar extends View {
     }
 
     public void setProgress(@IntRange(from = 0, to = 100) int progress) {
-        this.progress = progress;
+        utils.setProgress(progress);
         initInnerArcGradient();
 
         ValueAnimator animator = ValueAnimator.ofFloat(sweepAngle, calcSweepAngleFromProgress(progress));
