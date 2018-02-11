@@ -2,4 +2,7 @@
     <string name="app_name">Credit Score Demo</string>
     <string name="retry">Retry</string>
     <string name="dashboard">Dashboard</string>
+    <string name="credit_score_score_title">Your credit score is</string>
+    <string name="credit_score_max_score">out of %1$d</string>
+    <string name="credit_score_load_error">We are unable to fetch your credit score at this time</string>
 </resources>

@@ -9,7 +9,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
-import android.support.annotation.IntRange;
+import android.support.annotation.FloatRange;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
@@ -19,14 +19,14 @@ import com.snazzy.creditscoredemo.R;
 
 public class CreditScoreProgressBar extends View {
 
-    private static final int MAX_SWEEP_ANGLE = 360;
-    private static final int START_PROGRESS = 0;
-    private static final int MAX_PROGRESS = 100;
     private static final int ANIMATION_DURATION = 400;
-    // The gradient rotation angle starts from -91 instead of 90 degrees, to overcome a colouring error which happens when the arc is drawn
+    private static final int MAX_SWEEP_ANGLE = 360;
+    private static final float START_PROGRESS = 0;
+    private static final float MAX_PROGRESS = 100;
+    // The gradient rotation angle starts from -92 instead of 90 degrees, to overcome a colouring error which happens when the arc is drawn
     // with a rounded paint. This is not ideal it is recommended to find a way to calculate the angle offset that avoids the colouring error.
     // Or another way of solving it!
-    private static final float GRADIENT_ROTATION_ANGLE = -91;
+    private static final float GRADIENT_ROTATION_ANGLE = -92;
     private static final float ARC_START_ANGLE = -90;
 
     private float sweepAngle = 0;
@@ -146,7 +146,7 @@ public class CreditScoreProgressBar extends View {
      * The initialisation of the inner arc gradient depends on the progress that has been set on the custom view, so it is initialised
      * whenever the progress is set
      */
-    public void setProgress(@IntRange(from = START_PROGRESS, to = MAX_PROGRESS) int progress) {
+    public void setProgress(@FloatRange(from = START_PROGRESS, to = MAX_PROGRESS) float progress) {
         utils.setProgress(progress);
         initInnerArcGradient();
 

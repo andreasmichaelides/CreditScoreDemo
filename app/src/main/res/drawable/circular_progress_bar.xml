@@ -15,8 +15,6 @@
         </shape>
     </item>
 
-
-
     <item android:id="@android:id/progress">
         <rotate
             android:fromDegrees="-90"
@@ -27,7 +25,6 @@
                 android:shape="ring"
                 android:thickness="3dp"
                 android:type="sweep">
-                <!--<solid android:color="@color/colorAccent"/>-->
                 <gradient
                     android:endColor="@color/progress_dark"
                     android:startColor="@color/progress_light"
@@ -40,11 +37,3 @@
     </item>
 
 </layer-list>
-
-
-    <!--android:bottom="@dimen/donut_inner_padding"-->
-    <!--android:end="@dimen/donut_inner_padding"-->
-    <!--android:left="@dimen/donut_inner_padding"-->
-    <!--android:start="@dimen/donut_inner_padding"-->
-    <!--android:right="@dimen/donut_inner_padding"-->
-    <!--android:top="@dimen/donut_inner_padding"-->
