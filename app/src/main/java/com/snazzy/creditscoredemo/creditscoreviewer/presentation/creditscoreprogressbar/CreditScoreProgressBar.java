@@ -1,4 +1,4 @@
-package com.snazzy.creditscoredemo.creditscoreviewer.presentation;
+package com.snazzy.creditscoredemo.creditscoreviewer.presentation.creditscoreprogressbar;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
@@ -16,25 +16,25 @@ import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 
 import com.snazzy.creditscoredemo.R;
-import com.snazzy.creditscoredemo.core.presentation.creditscoreprogressbar.ArcSize;
-import com.snazzy.creditscoredemo.core.presentation.creditscoreprogressbar.CreditScoreProgressBarUtils;
-import com.snazzy.creditscoredemo.core.presentation.creditscoreprogressbar.GradientColourValues;
 
 public class CreditScoreProgressBar extends View {
 
-    private CreditScoreProgressBarUtils utils;
+    private static final int MAX_SWEEP_ANGLE = 360;
+    private static final int START_PROGRESS = 0;
+    private static final int MAX_PROGRESS = 100;
+    private static final int ANIMATION_DURATION = 400;
+    // The gradient rotation angle starts from -91 instead of 90 degrees, to overcome a colouring error which happens when the arc is drawn
+    // with a rounded paint. This is not ideal it is recommended to find a way to calculate the angle offset that avoids the colouring error.
+    // Or another way of solving it!
+    private static final float GRADIENT_ROTATION_ANGLE = -91;
+    private static final float ARC_START_ANGLE = -90;
 
-    private final float startAngle = -90;
     private float sweepAngle = 0;
-    private float maxSweepAngle = 360;
-    private int animationDuration = 400;
-    private int maxProgress = 100;
-
+    private CreditScoreProgressBarUtils utils;
     private Paint innerArcPaint;
     private Paint outerArcPaint;
     private Paint outlineArcPaint;
 
-    final float gradientRotationAngle = -91;
     int[] colors;
     private RectF outerArcOval;
     private RectF innerArcOval;
@@ -59,7 +59,12 @@ public class CreditScoreProgressBar extends View {
         float outerArcSize = getResources().getDimension(R.dimen.donut_outer_size);
         float innerOutlineArcSize = getResources().getDimension(R.dimen.donut_inner_arc_size);
         float innerArcPadding = getResources().getDimension(R.dimen.donut_inner_padding);
-        utils = new CreditScoreProgressBarUtils(innerOutlineArcSize, innerArcPadding, outerArcSize);
+        utils = new CreditScoreProgressBarUtils(innerOutlineArcSize,
+                innerArcPadding,
+                outerArcSize,
+                START_PROGRESS,
+                MAX_PROGRESS,
+                MAX_SWEEP_ANGLE);
 
         int startColor = ContextCompat.getColor(getContext(), R.color.progress_dark);
         int endColor = ContextCompat.getColor(getContext(), R.color.progress_light);
@@ -86,11 +91,16 @@ public class CreditScoreProgressBar extends View {
         innerArcPaint.setStrokeWidth(innerOutlineArcSize - innerArcOutlineSize);
     }
 
+    /**
+     * The initialisation of the arc components should be done only when when size has changed, to avoid instantiating objects during
+     * rendering, to avoid any frame drops
+     */
     @Override
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
         utils.setSize(width, height);
         initInnerArcGradient();
+        // Used a black arc, to draw an outline around the gradient arc.
         initOuterArc();
         initInnerArc();
     }
@@ -99,14 +109,14 @@ public class CreditScoreProgressBar extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         drawOuterArc(canvas);
-        drawInnerArcOutline(canvas);
+        drawInnerArc(canvas);
     }
 
     private void initInnerArcGradient() {
         GradientColourValues gradientValues = utils.calculateGradientColourValues();
         Shader gradient = new SweepGradient(gradientValues.xCentre(), gradientValues.yCentre(), colors, gradientValues.colourPositions());
         Matrix gradientMatrix = new Matrix();
-        gradientMatrix.preRotate(gradientRotationAngle, gradientValues.xCentre(), gradientValues.yCentre());
+        gradientMatrix.preRotate(GRADIENT_ROTATION_ANGLE, gradientValues.xCentre(), gradientValues.yCentre());
         gradient.setLocalMatrix(gradientMatrix);
 
         innerArcPaint.setShader(gradient);
@@ -123,26 +133,26 @@ public class CreditScoreProgressBar extends View {
     }
 
     private void drawOuterArc(Canvas canvas) {
-        canvas.drawArc(outerArcOval, startAngle, 360, false, outerArcPaint);
+        canvas.drawArc(outerArcOval, ARC_START_ANGLE, MAX_SWEEP_ANGLE, false, outerArcPaint);
     }
 
-    private void drawInnerArcOutline(Canvas canvas) {
+    private void drawInnerArc(Canvas canvas) {
         // Draw the outline of the inner arc first, so the inner arc paint can draw on top of it
-        canvas.drawArc(innerArcOval, startAngle, sweepAngle, false, outlineArcPaint);
-        canvas.drawArc(innerArcOval, startAngle, sweepAngle, false, innerArcPaint);
+        canvas.drawArc(innerArcOval, ARC_START_ANGLE, sweepAngle, false, outlineArcPaint);
+        canvas.drawArc(innerArcOval, ARC_START_ANGLE, sweepAngle, false, innerArcPaint);
     }
 
-    private float calcSweepAngleFromProgress(int progress) {
-        return (maxSweepAngle / maxProgress) * progress;
-    }
-
-    public void setProgress(@IntRange(from = 0, to = 100) int progress) {
+    /**
+     * The initialisation of the inner arc gradient depends on the progress that has been set on the custom view, so it is initialised
+     * whenever the progress is set
+     */
+    public void setProgress(@IntRange(from = START_PROGRESS, to = MAX_PROGRESS) int progress) {
         utils.setProgress(progress);
         initInnerArcGradient();
 
-        ValueAnimator animator = ValueAnimator.ofFloat(sweepAngle, calcSweepAngleFromProgress(progress));
+        ValueAnimator animator = ValueAnimator.ofFloat(sweepAngle, utils.calculateSweepAngle(progress));
         animator.setInterpolator(new DecelerateInterpolator());
-        animator.setDuration(animationDuration);
+        animator.setDuration(ANIMATION_DURATION);
         animator.addUpdateListener(valueAnimator -> {
             sweepAngle = (float) valueAnimator.getAnimatedValue();
             invalidate();

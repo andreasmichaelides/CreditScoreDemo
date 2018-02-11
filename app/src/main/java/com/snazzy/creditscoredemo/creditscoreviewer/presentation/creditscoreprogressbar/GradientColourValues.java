@@ -1,4 +1,4 @@
-package com.snazzy.creditscoredemo.core.presentation.creditscoreprogressbar;
+package com.snazzy.creditscoredemo.creditscoreviewer.presentation.creditscoreprogressbar;
 
 import com.google.auto.value.AutoValue;
 

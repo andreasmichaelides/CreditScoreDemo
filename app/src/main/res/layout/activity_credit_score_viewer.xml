@@ -35,17 +35,24 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <com.snazzy.creditscoredemo.creditscoreviewer.presentation.CreditScoreProgressBar
-        android:layout_margin="25dp"
+    <com.snazzy.creditscoredemo.creditscoreviewer.presentation.creditscoreprogressbar.CreditScoreProgressBar
         android:id="@+id/progressBar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_margin="25dp"
+        android:progress="30"
+        android:progressDrawable="@drawable/circular_progress_bar"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:progress="30"
         app:layout_constraintTop_toBottomOf="@+id/creditScoreAppBarLayout"
-        android:progressDrawable="@drawable/circular_progress_bar"/>
+        tools:visibility="visible"/>
+
+    <ProgressBar
+        android:id="@+id/creditScoreLoadingProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
 </android.support.constraint.ConstraintLayout>

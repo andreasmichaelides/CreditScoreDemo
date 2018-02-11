@@ -1,7 +1,9 @@
-package com.snazzy.creditscoredemo.core.presentation.creditscoreprogressbar;
+package com.snazzy.creditscoredemo.creditscoreviewer.presentation.creditscoreprogressbar;
 
-import android.support.annotation.IntRange;
-
+/**
+ * Created this class to handle most of the calculations needed for the custom progress bar.
+ * This way, the code can be easily tested with unit tests and spot any bugs early
+ */
 public class CreditScoreProgressBarUtils {
 
     private int viewWidth;
@@ -12,11 +14,22 @@ public class CreditScoreProgressBarUtils {
     private final float innerOutlineArcSize;
     private final float innerArcPadding;
     private final float outerArcSize;
+    private final int startProgress;
+    private final int maxProgress;
+    private final int maxSweepAngle;
 
-    public CreditScoreProgressBarUtils(float innerOutlineArcSize, float innerArcPadding, float outerArcSize) {
+    public CreditScoreProgressBarUtils(float innerOutlineArcSize,
+                                       float innerArcPadding,
+                                       float outerArcSize,
+                                       int startProgress,
+                                       int maxProgress,
+                                       int maxSweepAngle) {
         this.innerOutlineArcSize = innerOutlineArcSize;
         this.innerArcPadding = innerArcPadding;
         this.outerArcSize = outerArcSize;
+        this.startProgress = startProgress;
+        this.maxProgress = maxProgress;
+        this.maxSweepAngle = maxSweepAngle;
     }
 
     public void setSize(int width, int height) {
@@ -26,13 +39,17 @@ public class CreditScoreProgressBarUtils {
         yCentre = viewHeight / 2;
     }
 
-    public void setProgress(@IntRange(from = 0, to = 100) int progress) {
+    public void setProgress(int progress) {
         this.progress = progress;
     }
 
+    /**
+     * Used AutoValue models to pass the required parameters to the Custom View, to keep things consistent.
+     * Also for their immutability and throwing an exception if a value is not set
+     */
     public GradientColourValues calculateGradientColourValues() {
         return GradientColourValues.builder()
-                .colourPositions(new float[]{0.0f, ((float) progress) / 100f})
+                .colourPositions(new float[]{startProgress, (float) progress / (float) maxProgress})
                 .xCentre(xCentre)
                 .yCentre(yCentre)
                 .build();
@@ -46,6 +63,10 @@ public class CreditScoreProgressBarUtils {
     public ArcSize calculateInnerArcSize() {
         float innerArcDiameter = calculateHalfDiameter() - innerOutlineArcSize - innerArcPadding;
         return calculateArcSize(innerArcDiameter);
+    }
+
+    public float calculateSweepAngle(int progress) {
+        return ((float) maxSweepAngle / (float) maxProgress) * progress;
     }
 
     private int calculateHalfDiameter() {
