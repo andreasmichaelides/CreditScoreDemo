@@ -51,27 +51,25 @@ public class CreditScoreViewerActivity extends DaggerAppCompatActivity {
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(CreditScoreViewerViewModel.class);
 
         viewModel.creditScore().observe(this, this::setCreditScoreValues);
-        viewModel.showLoadingError().observe(this, ignored -> showCreditScoreLoadingError());
+        viewModel.showLoadingError().observe(this, this::showCreditScoreLoadingError);
         viewModel.showLoading().observe(this, this::onLoadingStateChanged);
         viewModel.showCreditScore().observe(this, this::showCreditScoreViews);
-
-        viewModel.loadCreditScore();
     }
 
     private void onLoadingStateChanged(boolean isLoading) {
         creditScoreLoadingProgressBar.setVisibility(isLoading ? VISIBLE : GONE);
     }
 
-    private void showCreditScoreLoadingError() {
-        Snackbar.make(creditScoreToolbar, getString(R.string.credit_score_load_error), Snackbar.LENGTH_INDEFINITE)
-                .setAction(R.string.retry, view -> viewModel.loadCreditScore())
-                .show();
+    private void showCreditScoreLoadingError(boolean showErrorMessage) {
+        if (showErrorMessage) {
+            Snackbar.make(creditScoreToolbar, R.string.credit_score_load_error, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(R.string.retry, view -> viewModel.loadCreditScore())
+                    .show();
+        }
     }
 
     private void setCreditScoreValues(CreditScore creditScore) {
-        float progress = ((float) creditScore.currentScore() / (float) creditScore.maxScore() * 100f);
-        creditScoreProgressBar.setProgress(progress);
-
+        creditScoreProgressBar.setProgress(creditScore.progress());
         creditScoreValueTextView.setText(String.valueOf(creditScore.currentScore()));
         creditScoreMaxValueTextView.setText(getString(R.string.credit_score_max_score, creditScore.maxScore()));
     }

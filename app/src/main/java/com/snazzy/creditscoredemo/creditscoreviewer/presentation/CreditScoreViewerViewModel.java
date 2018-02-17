@@ -5,7 +5,6 @@ import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
 
 import com.snazzy.creditscoredemo.core.Logger;
-import com.snazzy.creditscoredemo.core.presentation.SingleLiveEvent;
 import com.snazzy.creditscoredemo.creditscoreviewer.domain.GetCreditScore;
 import com.snazzy.creditscoredemo.creditscoreviewer.domain.model.CreditScore;
 
@@ -16,21 +15,23 @@ import io.reactivex.subjects.Subject;
 
 class CreditScoreViewerViewModel extends ViewModel {
 
+    private final Logger logger;
     // This subject acts as a trigger, that informs the stream to load the credit score.
     private final Subject<Object> loadCreditScore = PublishSubject.create();
     private final CompositeDisposable subscriptions = new CompositeDisposable();
 
     private final MutableLiveData<CreditScore> creditScore = new MutableLiveData<>();
-    // The single live event acts as a PublishSubject in RxJava, which emits a string once and does not keep it after its emission.
-    // This avoids showing the error multiple times, when the view (Activity) subscribes again to it, for example a screen rotation.
-    private final SingleLiveEvent<Boolean> showLoading = new SingleLiveEvent<>();
-    // Having a separate SingleLiveEvent for showing the credit score views, can help if we don't want to hide the current credit score
+    // Having a separate value for showing the credit score views, can help if we don't want to hide the current credit score,
     // if already displayed, while loading new values. Having this logic separated here, we can test these scenarios using unit tests
     // avoiding if statements in the Activity on whether to show the views or not.
-    private final SingleLiveEvent<Boolean> showCreditScore = new SingleLiveEvent<>();
-    private final SingleLiveEvent<String> loadingErrorMessage = new SingleLiveEvent<>();
+    private final MutableLiveData<Boolean> showCreditScore = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> loadingErrorMessage = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> showLoading = new MutableLiveData<>();
+    // Multiple LiveData could be switched to a single LiveData parameter which emits an ActivityModel, specifying all the values required
+    // by the Activity, like the loading , error state, etc. So one LiveData parameter could be enough to define the state of the CreditScore
 
     CreditScoreViewerViewModel(GetCreditScore getCreditScore, Logger logger) {
+        this.logger = logger;
         subscriptions.addAll(
                 loadCreditScore.flatMapSingle(ignored -> getCreditScore.execute()
                         .doOnSubscribe(disposable -> onCreditScoreLoadingStarted())
@@ -39,6 +40,14 @@ class CreditScoreViewerViewModel extends ViewModel {
                         .onErrorResumeNext(Single.never()))
                         .subscribe(this::onCreditScoreLoadSuccess, throwable -> logger.e(this, throwable))
         );
+
+        // Loading the credit score as soon as the ViewModel is created. During any Activity rotations, the existing credit score will be
+        // re used in the Activity, as soon as the Activity starts observing the LiveData again. This avoids API calls when only the Activity
+        // is recreated
+        // We also do not have to worry about the lifecycle of the Activity, because LiveData emit data during the right Activity states,
+        // so loading data before an Activity is initialised is possible and the Activity can display the loaded data when it starts observing
+        // the current LiveData
+        loadCreditScore();
     }
 
     private void onCreditScoreLoadingStarted() {
@@ -54,13 +63,15 @@ class CreditScoreViewerViewModel extends ViewModel {
     }
 
     private void onCreditScoreLoadSuccess(CreditScore creditScore) {
+        loadingErrorMessage.setValue(false);
         this.creditScore.setValue(creditScore);
         showLoading.setValue(false);
         showCreditScore.setValue(true);
     }
 
     private void onCreditScoreLoadError(Throwable throwable) {
-        loadingErrorMessage.setValue(throwable.getMessage());
+        logger.e(this, throwable);
+        loadingErrorMessage.setValue(true);
         showLoading.setValue(false);
     }
 
@@ -72,7 +83,7 @@ class CreditScoreViewerViewModel extends ViewModel {
         return creditScore;
     }
 
-    LiveData<String> showLoadingError() {
+    LiveData<Boolean> showLoadingError() {
         return loadingErrorMessage;
     }
 

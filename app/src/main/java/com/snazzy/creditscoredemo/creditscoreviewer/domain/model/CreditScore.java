@@ -9,6 +9,8 @@ public abstract class CreditScore {
 
     public abstract int maxScore();
 
+    public abstract float progress();
+
     public static Builder builder() {
         return new AutoValue_CreditScore.Builder();
     }
@@ -19,6 +21,8 @@ public abstract class CreditScore {
         public abstract Builder currentScore(int currentScore);
 
         public abstract Builder maxScore(int maxScore);
+
+        public abstract Builder progress(float progress);
 
         public abstract CreditScore build();
     }

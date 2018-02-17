@@ -18,8 +18,12 @@ public class CreditScoreMapper {
         return CreditScore.builder()
                 .currentScore(creditReportInfo.score())
                 .maxScore(creditReportInfo.maxScoreValue())
+                .progress(calculateProgress(creditReportInfo))
                 .build();
+    }
 
+    private float calculateProgress(CreditReportInfo creditReportInfo) {
+        return (float) creditReportInfo.score() / (float) creditReportInfo.maxScoreValue() * 100f;
     }
 
 }
