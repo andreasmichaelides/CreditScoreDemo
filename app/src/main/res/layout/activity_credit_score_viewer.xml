@@ -42,7 +42,6 @@
         android:layout_height="0dp"
         android:layout_margin="25dp"
         android:progress="30"
-        android:progressDrawable="@drawable/circular_progress_bar"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -108,6 +107,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@+id/creditScoreAppBarLayout"/>
 
 </android.support.constraint.ConstraintLayout>

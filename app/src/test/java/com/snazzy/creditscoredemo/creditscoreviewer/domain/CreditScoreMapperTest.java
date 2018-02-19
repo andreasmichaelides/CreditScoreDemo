@@ -35,14 +35,17 @@ public class CreditScoreMapperTest {
 
     @Test
     public void mapToCreditScore() throws Exception {
+        // given
         int currentScore = 125;
         int maxScore = 952;
         when(creditReportInfoMock.score()).thenReturn(currentScore);
         when(creditReportInfoMock.maxScoreValue()).thenReturn(maxScore);
         CreditScore expectedCreditScore = createCreditScore(maxScore, currentScore);
 
+        // when
         TestObserver<CreditScore> test = creditScoreMapper.mapToCreditScore(creditScoreResponseMock).test();
 
+        // then
         test.assertNoErrors()
                 .assertValue(expectedCreditScore);
     }
